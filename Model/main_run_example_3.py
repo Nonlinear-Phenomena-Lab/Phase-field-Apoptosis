@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import qmc
 
 def main():
-    n_samples = 1 #3
+    n_samples = 1 
 
     #         beta,    ebar,    alpha,    k1    k2   gamma tau
     p_sets = [1.5e-00, 2.0e-04, 9.0e-01, 0.9, 8.0, 1.0, 3.0e-04]
