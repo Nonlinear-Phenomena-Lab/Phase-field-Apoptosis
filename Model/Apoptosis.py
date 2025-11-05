@@ -61,13 +61,8 @@ def main(beta, ebar, alpha, k1, k2, gamma, tau):
     Lx, Ly = 4.0, 4.0
     Nx, Ny = 512, 512
 
-    max_dt = 1e-03
-    min_dt = 1e-14
     initial_dt = 1e-06
     stop_sim_time = 0.5
-
-    tol = 1e-04 * 4.0 # increase this
-    adapt_fac = 0.90
 
     dealias = 3/2
     timestepper = d3.RK443
