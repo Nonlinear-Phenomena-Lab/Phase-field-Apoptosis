@@ -47,7 +47,7 @@ def circle_with_noise(x, y, x0, y0, radius):
     
     # Create the phase field: inside the circle is 1, outside is 0
     phase_field = np.zeros_like(circle)
-    phase_field[circle <= radius**2] = 1
+    phase_field[circle <= radius**2] = 1.0
     
     # Add random noise to the region where the phase field is 1, but keep values between 0 and 1
     noise = noise_amplitude * np.random.randn(*phase_field.shape)
@@ -108,9 +108,10 @@ def initialize_fields(x, y, Lx, Ly, Nx, Ny, phi, ep, ep_prime, sig, r, theta, l_
     a2, b2 = 0.2, 0.3  # Semi-axes
     interface_width = 0.1  # Interface width
     radius = 3.0
+    vartheta = 25.0
 
     # Compute the phase field
     sig['g'] = circle_with_noise(x, y, x0, y0, radius) 
     r['g'] = - np.arctan((k2 * sig['g']))
     ep_prime['g'] = -np.sin(theta['g'])
-    ep['g'] = (25.0) + (np.cos(theta['g']))
+    ep['g'] = (vartheta) + (np.cos(theta['g']))

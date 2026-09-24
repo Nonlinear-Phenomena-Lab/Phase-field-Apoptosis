@@ -6,6 +6,7 @@ import dedalus.public as d3
 from dedalus.core.system import *
 from mpi4py import MPI
 import logging
+import utils as ut 
 from initialisation import *
 
 # Initialize MPI and logging
@@ -25,11 +26,7 @@ def setup_problem(Lx, Ly, Nx, Ny, l_f, l_phi, lr_phi, l1_sig, l2_sig, lr_sig, k2
     ybasis = d3.RealFourier(coords['y'], size=Ny, bounds=(-Ly, Ly), dealias=dealias)
 
     x = dist.local_grids(xbasis)
-    x_field = dist.Field(name='x_field', bases=(xbasis,))
-    x_field['g'] = x
     y = dist.local_grids(ybasis)
-    y_field = dist.Field(name='y_field', bases=(ybasis,))
-    y_field['g'] = y
 
     phi = dist.Field(name='phi', bases=(xbasis,ybasis))
     ep = dist.Field(name='ep', bases=(xbasis,ybasis))
@@ -40,29 +37,41 @@ def setup_problem(Lx, Ly, Nx, Ny, l_f, l_phi, lr_phi, l1_sig, l2_sig, lr_sig, k2
         
     dx = lambda A: d3.Differentiate(A, coords['x'])
     dy = lambda A: d3.Differentiate(A, coords['y'])
+
+    vartheta = 25.0
     
     problem = d3.IVP([phi, ep, ep_prime, sig, r, theta], namespace=locals())
     problem.add_equation("(dt(phi)) + (l_f * (phi/2)) =  (l_phi * (-dx(ep * ep_prime * dy(phi)) + dy(ep * ep_prime * dx(phi)) + div((ep**2)*grad(phi)))) + (l_f * phi**2) - (l_f * phi**3) + (l_f * (phi**2)/2) + ((phi - phi**2) * lr_phi * r) ")
     problem.add_equation("dt(sig) - (l1_sig * lap(sig)) - (l2_sig * dt(phi)) = -lr_sig * r * (phi - (phi**2))")
     problem.add_equation("r = - np.arctan((k2 * sig))")
     problem.add_equation("theta = np.arctan(dy(phi)/dx(phi))")
-    problem.add_equation("ep = (25.0) + (np.cos(theta))")
+    problem.add_equation("ep = (vartheta) + (np.cos(theta))")
     problem.add_equation("ep_prime = -np.sin(theta)")
     
     x0, y0 = 0, 0  # Center of the ellipsoid
     radius = 3.0
-    phi['g'] = circle_with_noise(x, y,x0, y0, radius)
+    phi['g'] = circle_with_noise(x, y, x0, y0, radius)
     theta['g'] = 0.0
     
     return problem, dist, xbasis, ybasis, phi, ep, ep_prime, sig, r, theta, x, y
 
-def main(l_f, l_phi, lr_phi, l1_sig, l2_sig, lr_sig, k2):
+def paraview_analysis(phi, sig, dist, solver, Lx, Ly, Nx, Ny, save_file):
+    phi_full = np.array((phi['g'].copy()))
+    sig_full = np.array((sig['g'].copy()))
+    domain_phi = phi.domain
+    domain_sig = sig.domain
+    # Save distributed arrays using the provided function with the full shape
+    ut.save_distributed_array(Nx, Ny, domain_phi, dist, phi_full, save_file + '/p' + str(solver.iteration), full_shape=(Nx, Ny), binary_format='bin')
+    ut.save_distributed_array(Nx, Ny, domain_sig, dist, sig_full, save_file + '/s' + str(solver.iteration), full_shape=(Nx, Ny), binary_format='bin')
+
+
+def main(l_f, l_phi, lr_phi, l1_sig, l2_sig, lr_sig, k2, save_file):
     import numpy as np
     Lx, Ly = 4.0, 4.0
     Nx, Ny = 512, 512
 
     initial_dt = 5.0e-5
-    stop_sim_time = 0.5
+    stop_sim_time = 2.0
 
     dealias = 3/2
     timestepper = d3.RK443
@@ -84,6 +93,9 @@ def main(l_f, l_phi, lr_phi, l1_sig, l2_sig, lr_sig, k2):
         logger.info('Starting main loop')
         current_dt = initial_dt
         while solver.proceed:
+            if solver.iteration % 1000 == 1:
+                paraview_analysis(phi, sig, dist, solver, Lx, Ly, Nx, Ny, save_file)
+
             solver.step(current_dt)
             if (solver.iteration-1) % 10 == 0:
                 output_time = solver.sim_time
@@ -104,7 +116,8 @@ if __name__ == "__main__":
     parser.add_argument('l2_sig', type=float, help='Parameter l2_sig')
     parser.add_argument('lr_sig', type=float, help='Parameter lr_sig')
     parser.add_argument('k2', type=float, help='Parameter k2')
+    parser.add_argument('save_file', type=str, help='Directory to save analysis files')
     
     args = parser.parse_args()
 
-    main(args.l_f, args.l_phi, args.lr_phi, args.l1_sig, args.l2_sig, args.lr_sig, args.k2)
+    main(args.l_f, args.l_phi, args.lr_phi, args.l1_sig, args.l2_sig, args.lr_sig, args.k2, args.save_file)

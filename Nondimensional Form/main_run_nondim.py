@@ -1,9 +1,10 @@
 # File for running simulation
 import subprocess
 import numpy as np
+import argparse
 from scipy.stats import qmc
 
-def main():
+def main(save_file):
     n_samples = 1 
 
     l_f = 3.33e+3
@@ -19,7 +20,7 @@ def main():
         # Command to run Apoptosis.py
         cmd1 = [
             'mpiexec', '-n', '8', 'python3', 'ApoptosisNondim.py',
-            str(p_sets[0]), str(p_sets[1]), str(p_sets[2]), str(p_sets[3]), str(p_sets[4]), str(p_sets[5]), str(p_sets[6]) 
+            str(p_sets[0]), str(p_sets[1]), str(p_sets[2]), str(p_sets[3]), str(p_sets[4]), str(p_sets[5]), str(p_sets[6]), save_file 
         ]
         file_pattern = "analysis_apoptosis/analysis_apoptosis_s1/*.h5" 
 
@@ -29,11 +30,13 @@ def main():
         ]
 
         # Run the first command
-        #process1 = subprocess.run(cmd1, check=True)
+        process1 = subprocess.run(cmd1, check=True)
 
-        process2 = subprocess.run(cmd2, check=True)
+        # process2 = subprocess.run(cmd2, check=True)
 
-
-        
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Run Cell fusion with parameters.')
+    parser.add_argument('save_file', type=str, help='Directory to save analysis files')
+    args = parser.parse_args()
+    
+    main(args.save_file)
