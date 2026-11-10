@@ -10,4 +10,3 @@ This repository holds the necessary Python code to generate the results from the
 
 ## Output 
 The code will produce simulations as can be seen below, given the right choice of parameter (see manuscript for details). 
-![Video of cellular apoptosis](phi_sigma.mov)
