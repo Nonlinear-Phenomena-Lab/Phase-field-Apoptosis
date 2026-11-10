@@ -17,7 +17,3 @@ analysis_apoptosis/*
 *.h5
 
 analysis_apoptosis/
-
-test/
-
-/N*
