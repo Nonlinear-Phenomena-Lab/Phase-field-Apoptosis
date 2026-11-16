@@ -11,5 +11,5 @@ This repository holds the necessary Python code to generate the results from the
 ## Output 
 The code will produce simulations as can be seen below, given the right choice of parameter (see manuscript for details). 
 
-## Zendo
+## Zenodo
 [![DOI](https://zenodo.org/badge/1452931817.svg)](https://doi.org/10.5281/zenodo.24279997)
