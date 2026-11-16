@@ -13,7 +13,7 @@ no_noise/
 m_mode/
 
 analysis_apoptosis/*
-*.png
+
 *.h5
 
 analysis_apoptosis/
